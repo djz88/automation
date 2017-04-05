@@ -241,15 +241,15 @@ if [ "$ret" = "0" ]; then
     ssh controller1 "zypper --non-interactive install sbd; sbd -d \$SBD_DEV create"
     ssh controller2 "zypper --non-interactive install sbd"
     # watchdog configuration
-    ssh controller1 modprobe softdog; echo softdog &gt; /etc/modules-load.d/watchdog.conf
-    ssh controller2 modprobe softdog; echo softdog &gt; /etc/modules-load.d/watchdog.conf
+    ssh controller1 "modprobe softdog; echo softdog &gt; /etc/modules-load.d/watchdog.conf"
+    ssh controller2 "modprobe softdog; echo softdog &gt; /etc/modules-load.d/watchdog.conf"
     # take scenario yaml file and replace /dev/sda with the right thing:
     sed -i "s|/dev/sda|\${SBD_DEV}|g" scenario.yml
     # ----- End of SBD
 EOSCRIPT
 
-  #chmod +x /tmp/sbd_prepare_$admin
-  #scp /tmp/sbd_prepare_$admin root@$admin:sbd_prepare
+  chmod +x /tmp/sbd_prepare_$admin
+  scp /tmp/sbd_prepare_$admin root@$admin:sbd_prepare
 
   # Check if zypper is used by other application
   ssh root@$admin '
@@ -275,7 +275,7 @@ if [ "$ret" = "0" ]; then
   export cephvolumenumber=1;
   export scenario=scenario.yml "'
 
-  timeout --signal=ALRM 240m bash -x -c "source scripts/qa_crowbarsetup.sh ; onadmin_runlist batch;"
+  timeout --signal=ALRM 240m bash -x -c "crowbar batch build $scenario;"
   ' || ret=$?
 
   if [ $ret != 0 ] ; then
