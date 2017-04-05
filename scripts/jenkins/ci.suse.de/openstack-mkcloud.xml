@@ -375,7 +375,7 @@ fi
 if [[ $hacloud == 1 ]] ; then
   : ${clusterconfig:=data+services+network=2}
   export clusterconfig
-  if [[ $nodenumber &lt; 4 ]] ; then
+  if [[ $nodenumber -lt 4 ]] ; then
     export nodenumber=4
   fi
 
@@ -400,7 +400,7 @@ case "$storage_method" in
   ceph)
     want_ceph=1
     want_swift=0
-    if [[ $nodenumber &lt; 5 ]] ; then
+    if [[ $nodenumber -lt 5 ]] ; then
       export nodenumber=5
     fi
     cephvolumenumber=2
@@ -555,9 +555,9 @@ fi
     <hudson.plugins.logparser.LogParserPublisher plugin="log-parser@">
       <unstableOnWarning>false</unstableOnWarning>
       <failBuildOnError>false</failBuildOnError>
-      <showGraphs>true</showGraphs>
-      <useProjectRule>true</useProjectRule>
-      <projectRulePath>log-parser-plugin-rules.txt</projectRulePath>
+      <showGraphs>false</showGraphs>
+      <parsingRulesPath>log-parser-plugin-rules.txt</parsingRulesPath>
+      <useProjectRule>false</useProjectRule>
     </hudson.plugins.logparser.LogParserPublisher>
     <hudson.tasks.ArtifactArchiver>
       <artifacts>.artifacts/**</artifacts>
