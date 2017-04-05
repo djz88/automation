@@ -135,25 +135,25 @@ ssh root@$admin "
   [[ -z $upgrade_cloudsource ]] &amp;&amp; \
   complain 55 "Variable \$upgrade_cloudsource not defined, upgrade target is missing"
 
-  #zypper refresh
-  #zypper update
-  #zypper --non-interactive install crowbar-ui
+  zypper refresh
+  zypper update
+  zypper --non-interactive install crowbar-ui
 
   # from scripts/mkcloud -&gt; crowbarupgrade_5plus
-  #onadmin_zypper_patch_all
-  #onadmin_allow_vendor_change_at_nodes
+  onadmin_zypper_patch_all
+  onadmin_allow_vendor_change_at_nodes
 
   export cct_tests=feature:ui:upgrade:landing
-  #onadmin_run_cct || exit 1
+  onadmin_run_cct || exit 1
 
   export cct_tests=feature:ui:upgrade:admin:backup
-  #onadmin_run_cct || exit 1
+  onadmin_run_cct || exit 1
 
   export cloudsource=$upgrade_cloudsource
-  #onadmin_prepare_cloudupgrade_admin_repos_6_to_7
+  onadmin_prepare_cloudupgrade_admin_repos_6_to_7
 
   export cct_tests=feature:ui:upgrade:admin:repos
-  #onadmin_run_cct || exit 1
+  onadmin_run_cct || exit 1
 
   # We only check if the upgrade screen is ready but we will do the upgrade via crowbarctl later
   export cct_tests=feature:ui:upgrade:admin:upgrade
