@@ -555,9 +555,9 @@ fi
     <hudson.plugins.logparser.LogParserPublisher plugin="log-parser@">
       <unstableOnWarning>false</unstableOnWarning>
       <failBuildOnError>false</failBuildOnError>
-      <showGraphs>false</showGraphs>
-      <parsingRulesPath>log-parser-plugin-rules.txt</parsingRulesPath>
-      <useProjectRule>false</useProjectRule>
+      <showGraphs>true</showGraphs>
+      <useProjectRule>true</useProjectRule>
+      <projectRulePath>log-parser-plugin-rules.txt</projectRulePath>
     </hudson.plugins.logparser.LogParserPublisher>
     <hudson.tasks.ArtifactArchiver>
       <artifacts>.artifacts/**</artifacts>
