@@ -295,6 +295,7 @@ ssh root@$admin "
   export want_ceph=1 ;
   export cephvolumenumber=1;
   export scenario=scenario.yml "'
+  echo "deployceph=1" &gt;&gt; mkcloud.config
 
   source scripts/qa_crowbarsetup.sh
 
