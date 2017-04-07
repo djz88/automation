@@ -145,9 +145,15 @@ ssh root@$admin "
   onadmin_zypper_patch_all
   onadmin_allow_vendor_change_at_nodes
 
-  export deployceph=1
-  onadmin_prepare_cloudupgrade_nodes_repos_6_to_7
-  onadmin_upgrade_ses_to_4
+  if crowbarctl proposal show ceph default ; then
+    export deployceph=1
+    echo "deployceph=$deployceph" &gt;&gt; mkcloud.config
+    export adminip=`hostname -f`
+    echo "adminip=$adminip" &gt;&gt; mkcloud.config
+    export cloudsource=$upgrade_cloudsource
+    onadmin_prepare_cloudupgrade_nodes_repos_6_to_7
+    onadmin_upgrade_ses_to_4
+  fi
 
   export cct_tests=feature:ui:upgrade:landing
   onadmin_run_cct || exit 1
