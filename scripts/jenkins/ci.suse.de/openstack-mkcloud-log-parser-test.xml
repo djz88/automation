@@ -119,8 +119,10 @@ if [[ $github_pr ]] ; then
         git checkout -t $ghremote/pr/$github_pr_id
         echo "we merge to always test what will end up in master"
         git merge master -m temp-merge-commit
-        # show latest commit in log to see what's really tested
-        git --no-pager show
+        # Show latest commit in log to see what's really tested.
+        # Include a unique indent so that the log parser plugin
+        # can ignore the output and avoid false positives.
+        git --no-pager show | sed 's/^/|@| /'
         popd
     elif [[ "$github_pr_repo" = "SUSE-Cloud/cct" ]]; then
         export want_cct_pr=$github_pr_id
@@ -166,14 +168,13 @@ curl -s https://ci.suse.de/view/Cloud/view/Worker/job/openstack-mkcloud/${sample
       <runAtEnd>true</runAtEnd>
     </org.jenkinsci.plugins.buildnamesetter.BuildNameSetter>
     <hudson.plugins.build__timeout.BuildTimeoutWrapper plugin="build-timeout@1.18">
-      <strategy class="hudson.plugins.build_timeout.impl.NoActivityTimeOutStrategy">
-        <timeoutSecondsString>3600</timeoutSecondsString>
+      <strategy class="hudson.plugins.build_timeout.impl.AbsoluteTimeOutStrategy">
+        <timeoutMinutes>60</timeoutMinutes>
       </strategy>
-      <operationList>
-        <hudson.plugins.build__timeout.operations.AbortOperation/>
-        <hudson.plugins.build__timeout.operations.WriteDescriptionOperation>
-          <description>Job aborted due to 60 minutes of inactivity.</description>
-        </hudson.plugins.build__timeout.operations.WriteDescriptionOperation>
+      <operationList class="java.util.Arrays$ArrayList">
+        <a class="hudson.plugins.build_timeout.BuildTimeOutOperation-array">
+          <hudson.plugins.build__timeout.operations.AbortOperation/>
+        </a>
       </operationList>
     </hudson.plugins.build__timeout.BuildTimeoutWrapper>
   </buildWrappers>
