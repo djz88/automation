@@ -15,30 +15,30 @@ This job will redeploy scenario-2c:
 
 It will wipe all QA2 machines!
 &lt;!-- Managed by Jenkins Job Builder --&gt;</description>
-  <logRotator class="hudson.tasks.LogRotator">
+  <keepDependencies>false</keepDependencies>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <concurrentBuild>false</concurrentBuild>
+  <assignedNode>cloud-mkphyscloud-gate-qa</assignedNode>
+  <canRoam>false</canRoam>
+  <logRotator>
     <daysToKeep>-1</daysToKeep>
     <numToKeep>15</numToKeep>
     <artifactDaysToKeep>-1</artifactDaysToKeep>
     <artifactNumToKeep>-1</artifactNumToKeep>
   </logRotator>
-  <keepDependencies>false</keepDependencies>
   <properties>
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
         <hudson.model.StringParameterDefinition>
           <name>hw_number</name>
           <description>Mandatory, name of the QA cloud server as integer</description>
-          <defaultValue/>
+          <defaultValue>2</defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>admin_os</name>
           <description>Mandatory, admin node operating system version</description>
           <defaultValue>sles12sp2</defaultValue>
-        </hudson.model.StringParameterDefinition>
-        <hudson.model.StringParameterDefinition>
-          <name>sbd_ip</name>
-          <description>Mandatory, IP of iscsi target for sbd</description>
-          <defaultValue>10.162.64.10</defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>repo_owner</name>
@@ -54,16 +54,6 @@ It will wipe all QA2 machines!
           <name>branch</name>
           <description>Mandatory, automation repo branch</description>
           <defaultValue>master</defaultValue>
-        </hudson.model.StringParameterDefinition>
-        <hudson.model.StringParameterDefinition>
-          <name>netapp_server</name>
-          <description>Mandatory, the name of the NetApp Storage backend server</description>
-          <defaultValue>netapp-n1-e0m.cloud.suse.de</defaultValue>
-        </hudson.model.StringParameterDefinition>
-        <hudson.model.StringParameterDefinition>
-          <name>netapp_vserver</name>
-          <description>Mandatory, the name of the NetApp Storage backend vserver</description>
-          <defaultValue>cloud-manila-svm</defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>tempest</name>
@@ -148,25 +138,13 @@ It will wipe all QA2 machines!
         </hudson.model.BooleanParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
-    <com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty plugin="build-failure-analyzer@">
-      <doNotScan>false</doNotScan>
-    </com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty>
   </properties>
   <scm class="hudson.scm.NullSCM"/>
-  <assignedNode>cloud-mkphyscloud-gate-qa</assignedNode>
-  <canRoam>false</canRoam>
-  <disabled>false</disabled>
-  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
-  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <triggers/>
-  <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
 admin=crowbar$hw_number
 cloud=qa$hw_number
-netapp_server=$netapp_server
-netapp_password=`cat /home/jenkins/passwords/netapp_password`
 
 if [ ! -z "$UPDATEREPOS" ] ; then
   export UPDATEREPOS=${UPDATEREPOS//$'\n'/+}
@@ -176,14 +154,6 @@ export artifacts_dir=$WORKSPACE/.artifacts
 rm -rf $artifacts_dir
 mkdir -p $artifacts_dir
 touch $artifacts_dir/.ignore
-
-# check that netapp backend server is available
-ping -c 3 $netapp_server || ret=$?
-
-if [ $ret != 0 ] ; then 
-  echo "netapp server is unavailable!"
-  exit 1
-fi
 
 # destroy the old admin VM if any and spawn a clean new admin VM afterwards
 # /usr/local/sbin/freshadminvm
@@ -208,8 +178,6 @@ ret=0
 
 ssh root@$admin "
 export cloud=$cloud ;
-export hw_number=$hw_number ;
-export sbd_ip=$sbd_ip ;
 export UPDATEREPOS=$UPDATEREPOS ;
 export UPDATEBEFOREINSTALL=$UPDATEBEFOREINSTALL ;
 export TESTHEAD=$TESTHEAD ;
@@ -223,17 +191,11 @@ export want_ceph=1 ;
 export networkingplugin=$networkingplugin ;
 export networkingmode=$networkingmode ;
 export cephvolumenumber=1 ;
-export netapp_password=$netapp_password ;
-export netapp_server=$netapp_server ;
-export netapp_vserver=$netapp_vserver ;
 export scenario=\"/root/scenario.yml\" ;
 export commands=\"$commands\" "'
 
 sed -i -e "s,##networkingplugin##,$networkingplugin," scenario.yml
 sed -i -e "s,##networkingmode##,$networkingmode," scenario.yml
-sed -i -e "s,##netapp_password##,$netapp_password," scenario.yml
-sed -i -e "s,##netapp_server##,$netapp_server," scenario.yml
-sed -i -e "s,##netapp_vserver##,$netapp_vserver," scenario.yml
 
 [ $UPDATEBEFOREINSTALL == "true" ] &amp;&amp; export updatesteps="addupdaterepo runupdate"
 
@@ -249,19 +211,18 @@ if [ "$ret" = "0" ]; then
     export ZYPP_LOCK_TIMEOUT=120
     zypper --gpg-auto-import-keys -p http://download.opensuse.org/repositories/devel:/languages:/python/SLE_12_SP2/ --non-interactive install python-sh
 
-    chmod +x scripts/iscsictl.py
-
-    for node in {controller1,controller2} ; do
-      ./scripts/iscsictl.py --service initiator --target_host $sbd_ip --host \$node --no-key --id id-qa$hw_number
-    done
-
+    wget --no-check-certificate https://raw.githubusercontent.com/SUSE-Cloud/automation/master/scripts/iscsictl.py
+    chmod +x iscsictl.py
+    ./iscsictl.py --service target --host \$(hostname) --no-key
+    ./iscsictl.py --service initiator --target_host \$(hostname) --host controller1 --no-key
+    ./iscsictl.py --service initiator --target_host \$(hostname) --host controller2 --no-key
     # preparation of SBD
     SBD_DEV=\$(ssh controller1 echo '/dev/disk/by-id/scsi-\$(lsscsi -i | grep LIO | tr -s " " |cut -d " " -f7)')
-    ssh controller1 "zypper --non-interactive install sbd; sbd -d \$SBD_DEV create -4 20 -1 10"
+    ssh controller1 "zypper --non-interactive install sbd; sbd -d \$SBD_DEV create"
     ssh controller2 "zypper --non-interactive install sbd"
     # watchdog configuration
-    ssh controller1 "modprobe softdog; echo softdog &gt; /etc/modules-load.d/watchdog.conf"
-    ssh controller2 "modprobe softdog; echo softdog &gt; /etc/modules-load.d/watchdog.conf"
+    ssh controller1 modprobe softdog; echo softdog &gt; /etc/modules-load.d/watchdog.conf
+    ssh controller2 modprobe softdog; echo softdog &gt; /etc/modules-load.d/watchdog.conf
     # take scenario yaml file and replace /dev/sda with the right thing:
     sed -i "s|/dev/sda|\${SBD_DEV}|g" scenario.yml
     # ----- End of SBD
@@ -270,12 +231,6 @@ EOSCRIPT
   chmod +x /tmp/sbd_prepare_$admin
   scp /tmp/sbd_prepare_$admin root@$admin:sbd_prepare
 
-  # Remove unused initiators from the iscsi target
-  iscsi_target_cleanup qa$hw_number
-
-  # Rerun chef-client to avoid frequent failures here and update bind records, see bsc#1021900
-  ssh root@$admin 'chef-client'
-
   # Check if zypper is used by other application
   ssh root@$admin '
     source scripts/qa_crowbarsetup.sh;
@@ -283,9 +238,13 @@ EOSCRIPT
       wait_for 20 10 "ssh $node \"zypper refresh\"" "zypper to be available on $node"
     done
   '
+
+  ssh root@$admin './sbd_prepare
+  ' || ret=$?
 fi
 
-ssh root@$admin "
+if [ "$ret" = "0" ]; then
+  ssh root@$admin "
   export cloud=$cloud ;
   export TESTHEAD=$TESTHEAD ;
   export cloudsource=$cloudsource ;
@@ -295,34 +254,32 @@ ssh root@$admin "
   export want_ceph=1 ;
   export cephvolumenumber=1;
   export scenario=scenario.yml "'
-  echo "deployceph=1" &gt;&gt; mkcloud.config
 
-  source scripts/qa_crowbarsetup.sh
+  timeout --signal=ALRM 240m bash -x -c "source scripts/qa_crowbarsetup.sh ; onadmin_runlist batch;"
+  ' || ret=$?
 
-  ./sbd_prepare
+  if [ $ret != 0 ] ; then
+    ssh root@$admin '
+    set -x
+    for node in $(crowbar machines list | grep ^d) ; do
+      (
+      echo "Collecting supportconfig from $node"
+      timeout 400 ssh $node supportconfig | wc
+      timeout 300 scp $node:/var/log/\*tbz /var/log/
+      )&amp;
+    done
+    timeout 500 supportconfig | wc &amp;
+    wait
+    '
 
-  crowbar batch --timeout 2400 build scenario.yml' || ret=$?
-
-if [ $ret != 0 ] ; then
-  ssh root@$admin '
-  set -x
-  for node in $(crowbar machines list | grep ^d) ; do
-    (
-    echo "Collecting supportconfig from $node"
-    timeout 400 ssh $node supportconfig | wc
-    timeout 300 scp $node:/var/log/\*tbz /var/log/
-    )&amp;
-  done
-  timeout 500 supportconfig | wc &amp;
-  wait
-  '
-fi &gt;&amp;2
-
-scp root@$admin:/var/log/*tbz $artifacts_dir/
+    scp root@$admin:/var/log/*tbz $artifacts_dir/
+  fi &gt;&amp;2
+  echo "mkphyscloud ret=$ret"
+fi
 exit $ret
 </command>
     </hudson.tasks.Shell>
-    <hudson.plugins.parameterizedtrigger.TriggerBuilder plugin="parameterized-trigger@">
+    <hudson.plugins.parameterizedtrigger.TriggerBuilder>
       <configs>
         <hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
           <configs>
@@ -339,7 +296,7 @@ scenario_build_number=$BUILD_NUMBER
           <projects>cloud-mkphyscloud-qa-tests-trigger</projects>
           <condition>ALWAYS</condition>
           <triggerWithNoParameters>false</triggerWithNoParameters>
-          <triggerFromChildProjects>false</triggerFromChildProjects>
+          <buildAllNodesWithLabel>false</buildAllNodesWithLabel>
           <block>
             <buildStepFailureThreshold>
               <name>FAILURE</name>
@@ -360,7 +317,6 @@ scenario_build_number=$BUILD_NUMBER
               <completeBuild>true</completeBuild>
             </failureThreshold>
           </block>
-          <buildAllNodesWithLabel>false</buildAllNodesWithLabel>
         </hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
       </configs>
     </hudson.plugins.parameterizedtrigger.TriggerBuilder>
@@ -370,17 +326,12 @@ scenario_build_number=$BUILD_NUMBER
       <artifacts>.artifacts/**</artifacts>
       <latestOnly>false</latestOnly>
       <allowEmptyArchive>true</allowEmptyArchive>
-      <onlyIfSuccessful>false</onlyIfSuccessful>
-      <fingerprint>false</fingerprint>
       <defaultExcludes>true</defaultExcludes>
-      <caseSensitive>true</caseSensitive>
     </hudson.tasks.ArtifactArchiver>
   </publishers>
   <buildWrappers>
-    <org.jenkinsci.plugins.buildnamesetter.BuildNameSetter plugin="build-name-setter@">
+    <org.jenkinsci.plugins.buildnamesetter.BuildNameSetter>
       <template>#${BUILD_NUMBER} ${ENV,var="cloudsource"} - qa${ENV,var="hw_number"} ${ENV,var="networkingplugin"}:${ENV,var="networkingmode"}</template>
-      <runAtStart>true</runAtStart>
-      <runAtEnd>true</runAtEnd>
     </org.jenkinsci.plugins.buildnamesetter.BuildNameSetter>
   </buildWrappers>
 </project>
