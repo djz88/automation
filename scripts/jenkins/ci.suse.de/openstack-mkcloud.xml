@@ -470,6 +470,8 @@ if [[ $github_pr ]] ; then
             git config --add remote.${ghremote}.fetch "+refs/pull/*/head:refs/remotes/${ghremote}/pr/*"
         git fetch $ghremote 2&gt;&amp;1 | grep -v '\[new ref\]' || :
         git checkout -t $ghremote/pr/$github_pr_id
+        git config user.email cloud-devel+jenkins@suse.de
+        git config user.name "Jenkins User"
         echo "we merge to always test what will end up in master"
         git merge master -m temp-merge-commit
         # Show latest commit in log to see what's really tested.
@@ -557,9 +559,9 @@ fi
     <hudson.plugins.logparser.LogParserPublisher plugin="log-parser@">
       <unstableOnWarning>false</unstableOnWarning>
       <failBuildOnError>false</failBuildOnError>
-      <showGraphs>true</showGraphs>
-      <useProjectRule>true</useProjectRule>
-      <projectRulePath>log-parser-plugin-rules.txt</projectRulePath>
+      <showGraphs>false</showGraphs>
+      <parsingRulesPath>log-parser-plugin-rules.txt</parsingRulesPath>
+      <useProjectRule>false</useProjectRule>
     </hudson.plugins.logparser.LogParserPublisher>
     <hudson.tasks.ArtifactArchiver>
       <artifacts>.artifacts/**</artifacts>
