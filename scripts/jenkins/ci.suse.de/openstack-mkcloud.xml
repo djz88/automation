@@ -328,7 +328,7 @@ want_node_aliases='data=1,services=2,storage=2' assigns the aliases to 5 nodes a
   <scm class="hudson.scm.NullSCM"/>
   <assignedNode>openstack-mkcloud</assignedNode>
   <canRoam>false</canRoam>
-  <disabled>false</disabled>
+  <disabled>true</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
   <triggers/>
