@@ -141,9 +141,7 @@ curl -s https://ci.suse.de/view/Cloud/view/Worker/job/openstack-mkcloud/${sample
     <hudson.plugins.logparser.LogParserPublisher>
       <unstableOnWarning>false</unstableOnWarning>
       <failBuildOnError>false</failBuildOnError>
-      <showGraphs>true</showGraphs>
-      <useProjectRule>true</useProjectRule>
-      <projectRulePath>log-parser-plugin-rules.txt</projectRulePath>
+      <parsingRulesPath>log-parser-plugin-rules.txt</parsingRulesPath>
     </hudson.plugins.logparser.LogParserPublisher>
     <hudson.tasks.ArtifactArchiver>
       <artifacts>.artifacts/**</artifacts>
