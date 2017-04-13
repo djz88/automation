@@ -63,12 +63,12 @@
   <builders>
     <hudson.tasks.Shell>
       <command>#####
-# THIS JOB JUST BUILD ONE CROWBAR PR AND HANDS IT OVER TO MKCLOUD (IMPLICITLY VIA THE crowbar-testbuild.py)
-# you can call it with a crowbar repo and a PR "&lt;pr_id&gt;:&lt;sha1&gt;:&lt;branch_name&gt;" as parameter and for this single
-# pr the crowbar-testbuild.py will be run no matter what its github status is
-#
+# THIS JOB JUST BUILD ONE CROWBAR PR AND HANDS IT OVER TO MKCLOUD (IMPLICITLY VIA THE crowbar-testbuild.rb)
 # The corresponding trigger job will (by default) only trigger builds for "unseen" PRs
 #  (unseen PR = no status reported from github-status on last commit of this PR)
+echo "Example how to call this job locally:"
+echo "   crowbar-testbuild.rb --org $crowbar_org --repo $crowbar_repo --pr $crowbar_github_pr"
+echo "This requires a valid config yaml however. See the automation repo for an example."
 
 set -x
 
@@ -93,19 +93,18 @@ function crowbargating_trap()
     $ghs -a set-status -s "failure" -r $crowbar_org/$crowbar_repo -t $BUILD_URL -c $github_pr_sha --context "suse/mkcloud/testbuild" -m "testbuild job failed"
 }
 
-# this job is part of the "pending" state (as it is a prerequisite of the openstack-mkcloud job)
-# so we report pending now
-$ghs -a set-status -s "pending" -r $crowbar_org/$crowbar_repo -t $BUILD_URL -c $github_pr_sha --context "suse/mkcloud/testbuild" -m "Started testbuild job"
-
-
-# the status of the build is set via crowbar-testbuild.py (hopefully)
-# as lots of failures happened lately, a trap was added to catch exceptions (all that we saw were worth an error report to the PR)
+# using a trap to catch all errors of the following commands
 trap "crowbargating_trap" ERR
 
-${automationrepo}/scripts/crowbar-testbuild.py $crowbar_org $crowbar_repo $crowbar_github_pr
+# report that the job has started (status "pending")
+$ghs -a set-status -s "pending" -r $crowbar_org/$crowbar_repo -t $BUILD_URL -c $github_pr_sha --context "suse/mkcloud/testbuild" -m "Started testbuild job"
 
-$ghs -a set-status -s "success" -r $crowbar_org/$crowbar_repo -t $BUILD_URL -c $github_pr_sha --context "suse/mkcloud/testbuild" -m "testbuild job succeeded"
+# do the build
+${automationrepo}/scripts/crowbar-testbuild.rb --org $crowbar_org --repo $crowbar_repo --pr $crowbar_github_pr --trigger-gating
+
+# update the status
 $ghs -a set-status -s "pending" -r $crowbar_org/$crowbar_repo -t $BUILD_URL -c $github_pr_sha --context "suse/mkcloud" -m "Queued testbuild PR gating"
+$ghs -a set-status -s "success" -r $crowbar_org/$crowbar_repo -t $BUILD_URL -c $github_pr_sha --context "suse/mkcloud/testbuild" -m "testbuild job succeeded"
 
 trap "-" ERR
 </command>

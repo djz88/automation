@@ -10,9 +10,7 @@
   </logRotator>
   <keepDependencies>false</keepDependencies>
   <properties>
-    <com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty plugin="build-failure-analyzer@">
-      <doNotScan>false</doNotScan>
-    </com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty>
+    <com.synopsys.arc.jenkins.plugins.ownership.jobs.JobOwnerJobProperty plugin="ownership@"/>
   </properties>
   <scm class="hudson.scm.NullSCM"/>
   <assignedNode>cloud-trigger</assignedNode>
@@ -22,7 +20,7 @@
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
   <triggers>
     <hudson.triggers.TimerTrigger>
-      <spec>H 6 * * *</spec>
+      <spec>32 22 * * *</spec>
     </hudson.triggers.TimerTrigger>
   </triggers>
   <concurrentBuild>false</concurrentBuild>
@@ -34,12 +32,19 @@
             <hudson.plugins.parameterizedtrigger.CurrentBuildParameters/>
             <hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
               <properties>TESTHEAD=1
-cloudsource=develcloud7
-nodenumber=2
-libvirt_type=xen
-mkcloudtarget=all
-label=openstack-mkcloud-SLE12-x86_64
-job_name=cloud-mkcloud7-job-xen-x86_64
+cloudsource=develcloud6
+upgrade_cloudsource=develcloud7
+nodenumber=7
+storage_method=ceph
+hacloud=1
+want_node_aliases=controller=2,ceph=3,compute=2
+clusterconfig=data+network+services=2
+want_nodesupgrade=1
+want_ping_running_instances=1
+mkcloudtarget=instonly batch testpreupgrade addupdaterepo runupdate cloudupgrade testpostupgrade testsetup
+scenario=cloud7-upgrade-non-disruptive-ceph-compute_ha.yml
+label=openstack-mkcloud-ha-x86_64
+job_name=cloud-mkcloud7-job-upgrade-nondisruptive-ha-ceph-compute_ha-x86_64
 </properties>
             </hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
           </configs>

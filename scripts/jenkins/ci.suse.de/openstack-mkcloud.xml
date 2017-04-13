@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
   <actions/>
-  <description>This job runs https://github.com/SUSE-Cloud/automation/blob/master/scripts/mkcloud&#13;
-Results are analyzed by https://github.com/SUSE-Cloud/automation/blob/master/scripts/jenkins/mkcloudresultcheck.pl on mkcloudresultcheck@mkcloudresultcheck.cloud.suse.de every 15 minutes&#13;
+  <description>This job runs https://github.com/SUSE-Cloud/automation/blob/master/scripts/mkcloud
+Results are analyzed by https://github.com/SUSE-Cloud/automation/blob/master/scripts/jenkins/mkcloudresultcheck.pl on mkcloudresultcheck@mkcloudresultcheck.cloud.suse.de every 15 minutes
 &lt;!-- Managed by Jenkins Job Builder --&gt;</description>
+  <logRotator class="hudson.tasks.LogRotator">
+    <daysToKeep>300</daysToKeep>
+    <numToKeep>2000</numToKeep>
+    <artifactDaysToKeep>-1</artifactDaysToKeep>
+    <artifactNumToKeep>-1</artifactNumToKeep>
+  </logRotator>
   <keepDependencies>false</keepDependencies>
   <properties>
     <hudson.security.AuthorizationMatrixProperty>
@@ -19,27 +25,6 @@ Results are analyzed by https://github.com/SUSE-Cloud/automation/blob/master/scr
       <permission>hudson.model.Item.Discover:cloud</permission>
       <permission>hudson.model.Run.Update:cloud</permission>
     </hudson.security.AuthorizationMatrixProperty>
-    <jenkins.model.BuildDiscarderProperty>
-      <strategy class="hudson.tasks.LogRotator">
-        <daysToKeep>300</daysToKeep>
-        <numToKeep>2000</numToKeep>
-        <artifactDaysToKeep>-1</artifactDaysToKeep>
-        <artifactNumToKeep>-1</artifactNumToKeep>
-      </strategy>
-    </jenkins.model.BuildDiscarderProperty>
-    <com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty plugin="build-failure-analyzer@">
-      <doNotScan>false</doNotScan>
-    </com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty>
-    <com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty plugin="gitlab-plugin@">
-      <gitLabConnection>https://gitlab.suse.de</gitLabConnection>
-    </com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty>
-    <org.jenkinsci.plugins.gitlablogo.GitlabLogoProperty plugin="gitlab-logo@">
-      <repositoryName/>
-    </org.jenkinsci.plugins.gitlablogo.GitlabLogoProperty>
-    <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@">
-      <autoRebuild>false</autoRebuild>
-      <rebuildDisabled>false</rebuildDisabled>
-    </com.sonyericsson.rebuild.RebuildSettings>
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
         <hudson.model.StringParameterDefinition>
@@ -68,8 +53,6 @@ Note: SHA1 must be latest commit in PR, $context is optional (only use if multip
           <description>Default: openstack-mkcloud | Possible values: openstack-mkcloud-SLE11 (SLE11 host), openstack-mkcloud-SLE12 (SLE12 host), openstack-mkcloud-SLE12-aarch64 (SLE12 aarch64 host)</description>
           <defaultValue>openstack-mkcloud</defaultValue>
           <allNodesMatchingLabel>false</allNodesMatchingLabel>
-          <triggerIfResult>allCases</triggerIfResult>
-          <nodeEligibility class="org.jvnet.jenkins.plugins.nodelabelparameter.node.AllNodeEligibility"/>
         </org.jvnet.jenkins.plugins.nodelabelparameter.LabelParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>debug_mkcloud</name>
@@ -321,9 +304,9 @@ want_node_aliases='data=1,services=2,storage=2' assigns the aliases to 5 nodes a
         </hudson.model.TextParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
-    <hudson.plugins.heavy__job.HeavyJobProperty plugin="heavy-job@1.1">
-      <weight>1</weight>
-    </hudson.plugins.heavy__job.HeavyJobProperty>
+    <com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty plugin="build-failure-analyzer@">
+      <doNotScan>false</doNotScan>
+    </com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty>
   </properties>
   <scm class="hudson.scm.NullSCM"/>
   <assignedNode>openstack-mkcloud</assignedNode>
@@ -504,7 +487,8 @@ if [[ $github_pr ]] ; then
 
 fi
 
-cp ${automationrepo}/scripts/jenkins/log-parser/openstack-mkcloud-rules.txt $WORKSPACE/log-parser-plugin-rules.txt
+cp ${automationrepo}/scripts/jenkins/log-parser/openstack-mkcloud-rules.txt \
+    $WORKSPACE/log-parser-plugin-rules.txt
 
 echo "########################################################################"
 env
@@ -576,12 +560,13 @@ fi
     <hudson.plugins.logparser.LogParserPublisher plugin="log-parser@">
       <unstableOnWarning>false</unstableOnWarning>
       <failBuildOnError>false</failBuildOnError>
-      <showGraphs>false</showGraphs>
-      <parsingRulesPath>/var/lib/jenkins/logparser/default</parsingRulesPath>
-      <useProjectRule>false</useProjectRule>
+      <showGraphs>true</showGraphs>
+      <useProjectRule>true</useProjectRule>
+      <projectRulePath>log-parser-plugin-rules.txt</projectRulePath>
     </hudson.plugins.logparser.LogParserPublisher>
     <hudson.tasks.ArtifactArchiver>
       <artifacts>.artifacts/**</artifacts>
+      <latestOnly>false</latestOnly>
       <allowEmptyArchive>false</allowEmptyArchive>
       <onlyIfSuccessful>false</onlyIfSuccessful>
       <fingerprint>false</fingerprint>
@@ -590,6 +575,12 @@ fi
     </hudson.tasks.ArtifactArchiver>
   </publishers>
   <buildWrappers>
+    <hudson.plugins.timestamper.TimestamperBuildWrapper plugin="timestamper@"/>
+    <org.jenkinsci.plugins.buildnamesetter.BuildNameSetter plugin="build-name-setter@">
+      <template>#${BUILD_NUMBER}: ${ENV,var="job_name"}</template>
+      <runAtStart>true</runAtStart>
+      <runAtEnd>true</runAtEnd>
+    </org.jenkinsci.plugins.buildnamesetter.BuildNameSetter>
     <hudson.plugins.build__timeout.BuildTimeoutWrapper plugin="build-timeout@1.18">
       <strategy class="hudson.plugins.build_timeout.impl.NoActivityTimeOutStrategy">
         <timeoutSecondsString>3600</timeoutSecondsString>
@@ -601,11 +592,5 @@ fi
         </hudson.plugins.build__timeout.operations.WriteDescriptionOperation>
       </operationList>
     </hudson.plugins.build__timeout.BuildTimeoutWrapper>
-    <hudson.plugins.timestamper.TimestamperBuildWrapper plugin="timestamper@"/>
-    <org.jenkinsci.plugins.buildnamesetter.BuildNameSetter plugin="build-name-setter@">
-      <template>#${BUILD_NUMBER}: ${ENV,var="job_name"}</template>
-      <runAtStart>true</runAtStart>
-      <runAtEnd>true</runAtEnd>
-    </org.jenkinsci.plugins.buildnamesetter.BuildNameSetter>
   </buildWrappers>
 </project>
