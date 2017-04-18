@@ -87,7 +87,7 @@ ssh root@$admin "
     else
       echo want_tempest=0 &gt;&gt; mkcloud.config
     fi
-    bash -x -c "source scripts/qa_crowbarsetup.sh; onadmin_testsetup"
+    bash -x -c "source scripts/qa_crowbarsetup.sh; onadmin_testsetup" || exit 1
   fi
 
   get_novacontroller;
