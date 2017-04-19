@@ -140,6 +140,8 @@ ssh root@$admin "
   onadmin_zypper_patch_all
   onadmin_allow_vendor_change_at_nodes
 
+  original_cloudsource=$cloudsource
+
   if crowbarctl proposal show ceph default ; then
     export deployceph=1
     export adminip=`hostname -f`
@@ -149,7 +151,7 @@ ssh root@$admin "
     onadmin_upgrade_ses_to_4
   fi
 
-  export cloudsource=$cloudsource
+  export cloudsource=$original_cloudsource
   export cct_tests=feature:ui:upgrade:landing
   onadmin_run_cct || exit 1
 
@@ -223,6 +225,8 @@ ssh root@$admin "
 
   export cct_tests=feature:ui:upgrade:pgsql:create
   onadmin_run_cct
+
+  onadmin_prepare_cloudupgrade_nodes_repos_6_to_7
 
   export cct_tests=feature:ui:upgrade:nodes:repos
   onadmin_run_cct
