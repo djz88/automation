@@ -23,6 +23,7 @@
             networkingmode=vxlan
             tempestoptions={tempestoptions}
             hacloud=1
+            want_all_ssl=1
             mkcloudtarget=all_noreboot
             label={label}
             job_name=cloud-mkcloud{version}-job-ha-{arch}
