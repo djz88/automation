@@ -258,32 +258,32 @@ want_node_aliases='data=1,services=2,storage=2' assigns the aliases to 5 nodes a
           <defaultValue/>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
-          <name>want_magnum</name>
+          <name>want_magnum_proposal</name>
           <description>Deploy with Magnum</description>
           <defaultValue/>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
-          <name>want_monasca</name>
+          <name>want_monasca_proposal</name>
           <description>Deploy with Monasca</description>
           <defaultValue/>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
-          <name>want_barbican</name>
+          <name>want_barbican_proposal</name>
           <description>Deploy with Barbican</description>
           <defaultValue/>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
-          <name>want_sahara</name>
+          <name>want_sahara_proposal</name>
           <description>set to 1 to deploy sahara</description>
           <defaultValue/>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
-          <name>want_murano</name>
+          <name>want_murano_proposal</name>
           <description>set to 1 to deploy murano</description>
           <defaultValue/>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
-          <name>want_aodh</name>
+          <name>want_aodh_proposal</name>
           <description>set to 0 to not deploy aodh</description>
           <defaultValue>1</defaultValue>
         </hudson.model.StringParameterDefinition>
