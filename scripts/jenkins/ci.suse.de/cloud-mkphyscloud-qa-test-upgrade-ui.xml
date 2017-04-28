@@ -272,6 +272,16 @@ ssh root@$admin "
   onadmin_run_cct
 
 '
+# Stop the ping script
+ping_instances stop $fips
+
+# Show results from ping log files
+ssh root@$admin "
+  source mkcloud.config;
+  source scripts/qa_crowbarsetup.sh;
+  get_novacontroller
+  oncontroller testpostupgrade
+"
 </command>
     </hudson.tasks.Shell>
   </builders>
