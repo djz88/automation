@@ -222,7 +222,6 @@ scp ~/github.com/$repo_owner/automation/scripts/scenarios/cloud$cloud_version/qa
 ret=0
 
 ssh root@$admin "
-export want_test_updates=1 ;
 export cloud=$cloud ;
 export hw_number=$hw_number ;
 export sbd_ip=$sbd_ip ;
