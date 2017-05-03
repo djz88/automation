@@ -99,6 +99,7 @@ Mandatory parameter: hw_number&#13;
     <hudson.tasks.Shell>
       <command>#!/bin/bash
 set +e;
+set -x;
 admin=crowbar$hw_number;
 cloud=qa$hw_number;
 cct_path="/root/github.com/$repo_owner/cct";
