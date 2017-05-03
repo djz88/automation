@@ -430,7 +430,7 @@ ${automationrepo}/scripts/jenkins/update_automation #NO PARAMETERS HERE ANY MORE
 
 function mkcloudgating_trap()
 {
-    $ghs -a set-status -s "failure" -r $github_pr_repo -t $BUILD_URL -c $github_pr_sha --context $ghs_context
+    $ghs -a set-status -s "failure" -r $github_pr_repo -t ${BUILD_URL}parsed_console/ -c $github_pr_sha --context $ghs_context
 }
 
 ## mkcloud github PR gating
