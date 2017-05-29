@@ -127,6 +127,11 @@ Note: SHA1 must be latest commit in PR, $context is optional (only use if multip
           <description>Number of compute nodes</description>
           <defaultValue/>
         </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>nics</name>
+          <description>Number of network interfaces for the nodes (admin node has always 1 currenty)</description>
+          <defaultValue>1</defaultValue>
+        </hudson.model.StringParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
           <name>WITHCROWBARREGISTER</name>
           <description>Boot up one node in the admin network from a preinstalled OS image, and register it with crowbar_register (image type depends on want_sles12 parameter)</description>
@@ -163,6 +168,11 @@ want_node_aliases='data=1,services=2,storage=2' assigns the aliases to 5 nodes a
           <name>want_rootfs</name>
           <description>Set to btrfs to deploy with btrfs</description>
           <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>crowbar_networkingmode</name>
+          <description>The Crowbar networking mode.</description>
+          <defaultValue>single</defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>want_postgresql</name>
