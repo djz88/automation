@@ -6,31 +6,26 @@ This job runs https://github.com/SUSE-Cloud/automation/blob/master/scripts/mkclo
 analyzed by https://github.com/SUSE-Cloud/automation/blob/master/scripts/jenkins/mkcloudresultcheck.pl
 on mkcloudresultcheck@mkcloudresultcheck.cloud.suse.de every 15 minutes
 &lt;!-- Managed by Jenkins Job Builder --&gt;</description>
-  <keepDependencies>false</keepDependencies>
-  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
-  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <concurrentBuild>true</concurrentBuild>
-  <assignedNode>openstack-mkcloud</assignedNode>
-  <canRoam>false</canRoam>
-  <logRotator>
+  <logRotator class="hudson.tasks.LogRotator">
     <daysToKeep>300</daysToKeep>
     <numToKeep>2000</numToKeep>
     <artifactDaysToKeep>-1</artifactDaysToKeep>
     <artifactNumToKeep>-1</artifactNumToKeep>
   </logRotator>
+  <keepDependencies>false</keepDependencies>
   <properties>
     <hudson.security.AuthorizationMatrixProperty>
-      <permission>hudson.model.Item.Build:cloud</permission>
       <permission>hudson.model.Item.Cancel:cloud</permission>
-      <permission>hudson.model.Item.Configure:cloud</permission>
       <permission>hudson.model.Item.Delete:cloud</permission>
-      <permission>hudson.model.Item.Discover:cloud</permission>
       <permission>hudson.model.Item.Read:cloud</permission>
-      <permission>hudson.model.Item.Workspace:cloud</permission>
-      <permission>hudson.model.Run.Delete:cloud</permission>
-      <permission>hudson.model.Run.Update:cloud</permission>
-      <permission>hudson.scm.SCM.Tag:cloud</permission>
       <permission>hudson.model.Item.Read:anonymous</permission>
+      <permission>hudson.model.Run.Delete:cloud</permission>
+      <permission>hudson.model.Item.Workspace:cloud</permission>
+      <permission>hudson.model.Item.Build:cloud</permission>
+      <permission>hudson.scm.SCM.Tag:cloud</permission>
+      <permission>hudson.model.Item.Configure:cloud</permission>
+      <permission>hudson.model.Item.Discover:cloud</permission>
+      <permission>hudson.model.Run.Update:cloud</permission>
     </hudson.security.AuthorizationMatrixProperty>
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
@@ -55,10 +50,11 @@ Note: SHA1 must be latest commit in PR, $context is optional (only use if multip
           <description>Defines which scenario file should be used. Only works with cloud5 or newer.  Currently only the 'batch' step uses such a file.</description>
           <defaultValue/>
         </hudson.model.StringParameterDefinition>
-        <org.jvnet.jenkins.plugins.nodelabelparameter.LabelParameterDefinition>
+        <org.jvnet.jenkins.plugins.nodelabelparameter.LabelParameterDefinition plugin="nodelabelparameter@">
           <name>label</name>
           <description>Default: openstack-mkcloud | Possible values: openstack-mkcloud-SLE11 (SLE11 host), openstack-mkcloud-SLE12 (SLE12 host), openstack-mkcloud-SLE12-aarch64 (SLE12 aarch64 host)</description>
           <defaultValue>openstack-mkcloud</defaultValue>
+          <allNodesMatchingLabel>false</allNodesMatchingLabel>
         </org.jvnet.jenkins.plugins.nodelabelparameter.LabelParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>cloudsource</name>
@@ -295,6 +291,13 @@ want_node_aliases='data=1,services=2,storage=2' assigns the aliases to 5 nodes a
     </hudson.model.ParametersDefinitionProperty>
   </properties>
   <scm class="hudson.scm.NullSCM"/>
+  <assignedNode>openstack-mkcloud</assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>true</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
       <command>set -x
@@ -533,7 +536,7 @@ fi
     </hudson.tasks.Shell>
   </builders>
   <publishers>
-    <hudson.plugins.logparser.LogParserPublisher>
+    <hudson.plugins.logparser.LogParserPublisher plugin="log-parser@">
       <unstableOnWarning>false</unstableOnWarning>
       <failBuildOnError>false</failBuildOnError>
       <showGraphs>true</showGraphs>
@@ -542,25 +545,29 @@ fi
     </hudson.plugins.logparser.LogParserPublisher>
     <hudson.tasks.ArtifactArchiver>
       <artifacts>.artifacts/**</artifacts>
-      <latestOnly>false</latestOnly>
       <allowEmptyArchive>false</allowEmptyArchive>
       <onlyIfSuccessful>false</onlyIfSuccessful>
       <fingerprint>false</fingerprint>
       <defaultExcludes>true</defaultExcludes>
+      <caseSensitive>true</caseSensitive>
     </hudson.tasks.ArtifactArchiver>
   </publishers>
   <buildWrappers>
-    <hudson.plugins.timestamper.TimestamperBuildWrapper/>
-    <org.jenkinsci.plugins.buildnamesetter.BuildNameSetter>
+    <hudson.plugins.timestamper.TimestamperBuildWrapper plugin="timestamper@"/>
+    <org.jenkinsci.plugins.buildnamesetter.BuildNameSetter plugin="build-name-setter@">
       <template>#${BUILD_NUMBER}: ${ENV,var="job_name"}</template>
+      <runAtStart>true</runAtStart>
+      <runAtEnd>true</runAtEnd>
     </org.jenkinsci.plugins.buildnamesetter.BuildNameSetter>
-    <hudson.plugins.build__timeout.BuildTimeoutWrapper>
-      <timeoutMinutes>60</timeoutMinutes>
-      <failBuild>false</failBuild>
-      <writingDescription>job aborted due to 60 minutes of inactivity.</writingDescription>
-      <timeoutPercentage>0</timeoutPercentage>
-      <timeoutMinutesElasticDefault>3</timeoutMinutesElasticDefault>
-      <timeoutType>no-activity</timeoutType>
+    <hudson.plugins.build__timeout.BuildTimeoutWrapper plugin="build-timeout@1.18">
+      <strategy class="hudson.plugins.build_timeout.impl.AbsoluteTimeOutStrategy">
+        <timeoutMinutes>60</timeoutMinutes>
+      </strategy>
+      <operationList class="java.util.Arrays$ArrayList">
+        <a class="hudson.plugins.build_timeout.BuildTimeOutOperation-array">
+          <hudson.plugins.build__timeout.operations.AbortOperation/>
+        </a>
+      </operationList>
     </hudson.plugins.build__timeout.BuildTimeoutWrapper>
   </buildWrappers>
 </project>
