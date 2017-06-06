@@ -36,8 +36,6 @@ networkingplugin=linuxbridge
 tempestoptions=--smoke
 mkcloudtarget=all
 label=openstack-mkcloud-SLE12-x86_64
-# Temporal fix meanwhile test repository is fixed for Ceph
-want_test_updates=0
 job_name=cloud-mkcloud7-job-4nodes-linuxbridge-x86_64
 </properties>
             </hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
