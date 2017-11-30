@@ -8,9 +8,16 @@
 
 - wrapper:
     name: mkphyscloud-qa-build-name-wrapper
-    wrappers: 
+    wrappers:
       - build-name:
           name: '#${BUILD_NUMBER} ${ENV,var="cloudsource"} - qa${ENV,var="hw_number"} ${ENV,var="networkingplugin"}:${ENV,var="networkingmode"}'
+      - timestamps
+
+- wrapper:
+    name: mkcloud-qam-build-name-wrapper
+    wrappers:
+      - build-name:
+          name: '#${BUILD_NUMBER} ${ENV,var="cloudsource"} - qam${ENV,var="hw_number"} ${ENV,var="networkingplugin"}:${ENV,var="networkingmode"} ${ENV.var="UPDATE_STATE"}'
       - timestamps
 
 - publisher:

@@ -1,0 +1,350 @@
+- job:
+    name: cloud-mkcloud-qam-scenario-3a
+    node: qam-cloud-doener-nonha-virt
+    description: |
+      <b>This job is managed by JJB! Changes must be done in
+      <a href='https://github.com/SUSE-Cloud/automation/tree/master/jenkins/ci.suse.de/'>git</a>
+      </b>
+      Scenario details:
+        - 4 nodes
+        - non-HA
+        - swift
+        - Neutron: linuxbridge or OVS
+
+      It will wipe all machines in the selected cloud!
+
+    wrappers:
+      - mkcloud-qam-build-name-wrapper
+    publishers:
+      - mkphyscloud-qa-common-publishers
+
+    logrotate:
+      numToKeep: 15
+      daysToKeep: -1
+
+    parameters:
+      - string:
+          name: hw_number
+          default: "0"
+          description: Mandatory, name of the QA cloud server as integer
+
+      - string:
+          name: admin_os
+          default: sles12sp2
+          description: Mandatory, admin node operating system version
+
+      - string:
+          name: shared_storage_ip
+          default: 10.162.66.1
+          description: Mandatory, shared storage server IP
+
+      - string:
+          name: repo_owner
+          default: SUSE-Cloud
+          description: Mandatory, automation repo owner/organization
+
+      - string:
+          name: automation_repo
+          default: git://github.com/$repo_owner/automation.git
+          description: Mandatory, automation repo URL
+
+      - string:
+          name: branch
+          default: master
+          description: Mandatory, automation repo branch
+
+      - string:
+          name: networkingplugin
+          default: openvswitch
+          description: |
+               networking plugin to be used by Neutron. Available options are: openvswitch:gre, vlan, vxlan / linuxbridge:vlan
+
+      - string:
+          name: networkingmode
+          default: gre
+          description: networking mode to be used by Neutron. Available options are gre, vlan, vxlan
+
+      - string:
+          name: tempest
+          default: smoke
+          description: Optional, specify what tempest test(s) to run, e.g. smoke, smoke, full or none. Default is smoke
+
+      - string:
+          name: cct
+          default: features:base
+          description: Optional, specify cct tests to run
+
+      - bool:
+          name: trigger_upgrade
+          default: false
+          description: Trigger the upgrade process for this cloud in a separate job
+
+      - bool:
+          name: horizon-tests
+          default: false
+          description: Optional, Run horizon integration tests.
+
+      - string:
+          name: ssl_type
+          default: no-ssl
+          description: "Mandatory, set the SSL configuration for the cloud, available options: no-ssl, ssl-insecure, ssl"
+
+      - string:
+          name: cloud_version
+          default: "7"
+          description: Mandatory, version of the cloud to be installed as integer
+
+      - string:
+          name: scenario_file
+          default: qam-scenario-1a.yaml
+          description: Scenario yaml file name
+
+      # Parameters for qa_crowbarsetup.sh
+      - string:
+          name: cloudsource
+          default: $cloud_version
+
+      - string:
+          name: upgrade_cloudsource
+          default: develcloud$(($cloud_version + 1))
+
+      - string:
+          name: TESTHEAD
+          default: ""
+          description: if non-empty, test latest version from Devel:Cloud Stagin
+
+      - string:
+          name: hacloud
+          default: "0"
+          description: By default we do not want HA configured and installed
+
+      - string:
+          name: clusterconfig
+          default: services=3
+          description: HA configuration for clusters. Make sense only if hacloud=1
+
+      - string:
+          name: nodenumber
+          default: "5"
+          description: Number of nodes to use; is scenario specific
+
+      - string:
+          name: nodealiases
+          default: "compute-kvm=2,storage-swift=2"
+          description: Aliases for the nodes, number of controllers is calculated from cluster config(). Example "compute-kvm=2,storage-swift=2" or compute-xen=2 can be used for XEN nodes.
+
+      - string:
+          name: want_ipmi
+          default: "false"
+
+      - string:
+          name: commands
+          default: |
+            cleanup prepare setupadmin addupdaterepo prepareinstcrowbar bootstrapcrowbar instcrowbar rebootcrowbar 
+            setupnodes instnodes setup_aliases
+          description: All the steps that needs to be completed to have cloud installed (if you want to apply updates before install please see attribut UPDATEBEFOREINSTALL)
+
+      - string:
+          name: controller_node_memory
+          default: "8242880"
+          description: set controller memory
+
+      - string:
+          name: libvirt_type
+          default:
+          description: Optional, set libvirt_type, default kvm and other option is xen
+
+      - text:
+          name: UPDATEREPOS
+          default:
+          description: Update repositories (one URL per line)
+
+      - bool:
+          name: UPDATEBEFOREINSTALL
+          default: false
+          description: update before install
+
+      - bool:
+          name: UPDATEAFTERINSTALL
+          default: false
+          description: update after install
+
+    builders:
+      - shell: |
+          #!/bin/bash
+
+          ## START - declaration of functions
+          # function to run tempest tests
+          function run_tempest()
+          {
+          if [ "${tempest}" == "none" ]; then
+              echo "Tempest option set to none: skipping tempest run"
+          elif [ "${tempest}" == "smoke" ]; then
+              export tempestoptions="-t -s"
+              ${mkcloud_params} /root/automation/scripts/mkcloud testsetup || ret=$?
+              if [ $ret != 0 ] ; then
+                scp root@$admin:/var/log/*tbz $artifacts_dir/
+                exit 20
+              fi >&2
+          elif [ "${tempest}" == "full" ]; then
+             export tempestoptions="-t"
+             ${mkcloud_params} /root/automation/scripts/mkcloud testsetup || ret=$?
+
+              if [ $ret != 0 ] ; then
+                scp root@$admin:/var/log/*tbz $artifacts_dir/
+                exit 20
+              fi >&2
+          else
+              echo "wrong tempest option provided"
+          fi
+          }
+
+          # function to run CCT tests
+          function run_cct()
+          {
+          cloudpv=/dev/cloud nodenumber=${nodenumber} cloudsource=GM${cloud_version}+up \
+          cct_tests=${cct} \
+          /root/automation/scripts/mkcloud cct
+
+          if [ $ret != 0 ] ; then
+            scp root@$admin:/var/log/*tbz $artifacts_dir/
+            exit 20
+          fi >&2
+          }
+
+          # function to do the update - is use after tests without updates passed
+          function do_update()
+          {
+          echo "Running updates..."
+          ${mkcloud_params} /root/automation/scripts/mkcloud runupdate
+
+          if [ $ret != 0 ] ; then
+            scp root@$admin:/var/log/*tbz $artifacts_dir/
+            exit 20
+          fi >&2
+
+          }
+          ## END - declaration of functions
+
+          ## START - declaration of variables
+          # declaration of variables and suuport stuff
+          for i in ${mkcloud_params}; do
+            export $i
+          done
+
+          export libvirt_type="${libvirt_type}"
+          export cloudpv="/dev/cloud"
+          export nodenumber="${nodenumber}"
+          export cloudsource="GM${cloud_version}+up"
+          export scenario_dir="."
+          #scenario_dir="/workspace/${scenario_file%.yaml}/${scenario_file}"
+          export scenario="${scenario_dir}/${scenario_file}"
+
+          admin="crowbar"
+          cloud="doener${hw_number}"
+          # HA params - if used
+          if [ "$hacloud" -eq 1 ] ; then
+            controllernumber=${clusterconfig#*=}
+          else
+            controllernumber=1
+          fi
+
+          # set update repos
+          if [ ! -z "$UPDATEREPOS" ] ; then
+            export UPDATEREPOS=${UPDATEREPOS//$'\n'/+}
+          fi
+
+          # set controller memory
+          if [ ! -z "$controller_node_memory" ] ; then
+            export controller_node_memory=$controller_node_memory
+          fi
+
+          # handling node aliases on crowbar - need to match aliases used in scenario
+          if [ ! -z "$nodealiases" ] ; then
+            export want_node_aliases=controller=${controllernumber},${nodealiases}
+          else
+            echo "NO nodeliases SETUP - EXITING";exit 1
+          fi
+
+          # handle update scenarios
+          # UPDATE_STATE variable can have:
+          # no updates 0
+          # updates after 1
+          # updates within 2
+          UPDATE_STATE=0
+          if $UPDATEAFTERINSTALL == "true" ]; then
+            UPDATE_STATE=1
+          fi
+          if [ $UPDATEBEFOREINSTALL == "true" ] ; then
+            export commands="${commands%prepareinstcrowbar*} prepareinstcrowbar runupdate ${commands#*prepareinstcrowbar}"
+            UPDATE_STATE=2
+          fi
+          ## END - declaration of variables
+
+          ## START - SOME MAGIC
+          # some cleanups + preparation of workspace
+          export artifacts_dir=$WORKSPACE/.artifacts
+          rm -rf $artifacts_dir
+          mkdir -p $artifacts_dir
+          touch $artifacts_dir/.ignore
+
+          # scenario handlling + substitution
+          cp /root/automation/scripts/scenarios/cloud7/qam/$ssl_type/${scenario_file} ${scenario_file}
+          echo "pwd"
+          pwd
+          sed -i -e "s,##shared_nfs_for_database##,$shared_storage_ip:/var/$cloud/ha-database," ${scenario_file}
+          sed -i -e "s,##shared_nfs_for_rabbitmq##,$shared_storage_ip:/var/$cloud/ha-rabbitmq," ${scenario_file}
+          sed -i -e "s,##cinder-storage-shares##,$shared_storage_ip:/var/$cloud/cinder-storage," ${scenario_file}
+          sed -i -e "s,##networkingplugin##,$networkingplugin," ${scenario_file}
+          sed -i -e "s,##networkingmode##,$networkingmode," ${scenario_file}
+          # default return value
+          ret=0
+          ## END - some magic
+
+          # START - MAIN jenkins scenario steps
+          # preparation step
+          echo "Preparing for deployment..."
+          ${mkcloud_params} /root/automation/scripts/mkcloud ${commands} || ret=$?
+
+          if [ $ret != 0 ] ; then
+            scp root@$admin:/var/log/*tbz $artifacts_dir/
+            exit 10
+          fi >&2
+
+          # deployment step
+          echo "Deploying cloud..."
+          ${mkcloud_params} /root/automation/scripts/mkcloud batch || ret=$?
+
+          if [ $ret != 0 ] ; then
+            scp root@$admin:/var/log/*tbz $artifacts_dir/
+            exit 20
+          fi >&2
+
+          ## UPDATE SCENARIO
+
+          echo $UPDATE_STATE
+          case $UPDATE_STATE in
+          0)
+            echo "Scenario without updates..."
+            run_tempest
+            run_cct
+            ;;
+          1)
+            echo "Scenario with updates after deployment..."
+            run_tempest;
+            run_cct;
+            do_update;
+            run_tempest;
+            run_cct
+            ;;
+          2)
+            echo "Scenario with updates within deployment..."
+            run_tempest;
+            run_cct;
+            ;;
+          *)
+            echo "wrong update scenario should be 0, 1 or 2)"
+            ;;
+          esac
+
+          exit $ret
