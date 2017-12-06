@@ -14,7 +14,7 @@
       It will wipe all machines in the selected cloud!
 
     wrappers:
-      - mkphyscloud-qa-build-name-wrapper
+      - mkcloud-qam-build-name-wrapper
     publishers:
       - mkphyscloud-qa-common-publishers
 
@@ -159,15 +159,10 @@
           default:
           description: Update repositories (one URL per line)
 
-      - bool:
-          name: UPDATEBEFOREINSTALL
-          default: false
-          description: update before install
-
-      - bool:
-          name: UPDATEAFTERINSTALL
-          default: false
-          description: update after install
+      - string:
+          name: UPDATESCEN
+          default:
+          description: define if you want to deploy updates after or within deployment. Default is none, other options are "after | within"
 
     builders:
       - shell: |
@@ -271,14 +266,14 @@
           # no updates 0
           # updates after 1
           # updates within 2
-          UPDATESCEN=0
-          if $UPDATEAFTERINSTALL == "true" ]; then
-            UPDATESCEN=1
-          fi
-          if [ $UPDATEBEFOREINSTALL == "true" ] ; then
-            export commands="${commands%prepareinstcrowbar*} prepareinstcrowbar runupdate ${commands#*prepareinstcrowbar}"
-            UPDATESCEN=2
-          fi
+          ##UPDATESCEN=0
+          ##if $UPDATEAFTERINSTALL == "true" ]; then
+          ##  UPDATESCEN=1
+          ##fi
+          ##if [ $UPDATEBEFOREINSTALL == "true" ] ; then
+          ##  export commands="${commands%prepareinstcrowbar*} prepareinstcrowbar runupdate ${commands#*prepareinstcrowbar}"
+          ##  UPDATESCEN=2
+          ##fi
           ## END - declaration of variables
 
           ## START - SOME MAGIC
@@ -322,14 +317,13 @@
 
           ## UPDATE SCENARIO
 
-          echo $UPDATESCEN
           case $UPDATESCEN in
-          0)
+          "")
             echo "Scenario without updates..."
             run_tempest
             run_cct
             ;;
-          1)
+          after)
             echo "Scenario with updates after deployment..."
             run_tempest;
             run_cct;
@@ -337,7 +331,7 @@
             run_tempest;
             run_cct
             ;;
-          2)
+          within)
             echo "Scenario with updates within deployment..."
             run_tempest;
             run_cct;
