@@ -1,0 +1,469 @@
+---
+proposals:
+#- barclamp: crowbar
+#  wipe_attributes:
+#    - instances.deployer
+#    - instances.ipmi
+#    - instances.provisioner
+#    - instances.network
+#    - instances.ntp
+#    - instances.dns
+#    - instances.logging
+#  attributes:
+#    realm: SUSE OpenStack Cloud Admin Server
+#    users:
+#      machine-install:
+#        password: c359cb3bda85c890e621c60b5360f477d601d715600209689e1db3d82f4b1926141c9c6d29f5739b0f37b449065e369646ab4c80382de694b7d044e9ed394873
+#  deployment:
+#    elements:
+#      crowbar:
+#      - crowbar.virtual.cloud.suse.de
+#- barclamp: deployer
+#  attributes:
+#  deployment:
+#    elements:
+#      deployer-client:
+#      - crowbar.virtual.cloud.suse.de
+#      - "@@controller@@"
+#      - "@@compute1@@"
+#      - "@@storage2@@"
+#      - "@@compute2@@"
+#      - "@@storage1@@"
+#- barclamp: provisioner
+#  attributes:
+#    root_password_hash: "$1$/c3a6L9Q$Y.fOTi7OIYMhlmiYg9hUw."
+#    access_keys: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyCD4aHSbjSSLy71uE/kwWjgxTQ4G3IPf+Dq/npnMinogSVREQRPw9vB1UV+uF1N8yP45V1b6E/YHV5Ns5IoF0/GDX7JhY6EJyxbJBnkueOA/jru6YlbJHcc4kenYC8xGtzElxma3Hwla40xjb38hGi9fjOkCcbITwT0+SaHzu3qGgHcUDXYYRS/EXSjtk3gXM7zSAmzKmXruNSA18IZceu9q70inFoSo3xTlPWR/8tArpwFxCNBdOMIwjy4qGxNd5A09TlnD66TR5hSfeG5zlPPcfkt8giPZUkImUfHhcqU5NJkZzXWQMi5eQYAbzaG+Cm+1le2wMSv7WbG1qzRWV
+#      root@doener6 injected-from-host
+#    discovery:
+#      append: DISCOVERY_ROOT_PASSWORD=linux
+#    timezone: Etc/UTC
+#  deployment:
+#    elements:
+#      provisioner-server:
+#      - crowbar.virtual.cloud.suse.de
+#      provisioner-base:
+#      - crowbar.virtual.cloud.suse.de
+#      - "@@controller@@"
+#      - "@@compute1@@"
+#      - "@@compute2@@"
+#      - "@@storage2@@"
+#      - "@@storage1@@"
+#- barclamp: ipmi
+#  attributes:
+#  deployment:
+#    elements:
+#      bmc-nat-router:
+#      - crowbar.virtual.cloud.suse.de
+#      ipmi:
+#      - crowbar.virtual.cloud.suse.de
+#      - "@@controller@@"
+#      - "@@compute1@@"
+#      - "@@storage2@@"
+#      - "@@compute2@@"
+#      - "@@storage1@@"
+#      bmc-nat-client:
+#      - "@@controller@@"
+#      - "@@compute1@@"
+#      - "@@compute2@@"
+#      - "@@storage2@@"
+#      - "@@storage1@@"
+#- barclamp: network
+#  attributes:
+#    networks:
+#      public:
+#        mtu: 1500
+#        subnet: 192.168.122.0
+#        broadcast: 192.168.122.255
+#        router: 192.168.122.1
+#        ranges:
+#          host:
+#            start: 192.168.122.2
+#            end: 192.168.122.127
+#      nova_fixed:
+#        mtu: 1500
+#      nova_floating:
+#        mtu: 1500
+#        subnet: 192.168.122.128
+#        broadcast: 192.168.122.255
+#        ranges:
+#          host:
+#            start: 192.168.122.129
+#            end: 192.168.122.254
+#      bmc:
+#        router: 192.168.124.1
+#  deployment:
+#    elements:
+#      switch_config:
+#      - crowbar.virtual.cloud.suse.de
+#      network:
+#      - crowbar.virtual.cloud.suse.de
+#      - "@@controller@@"
+#      - "@@compute1@@"
+#      - "@@compute2@@"
+#      - "@@storage2@@"
+#      - "@@storage1@@"
+#- barclamp: dns
+#  attributes:
+#    domain: virtual.cloud.suse.de
+#    forwarders:
+#    - 192.168.124.1
+#    records:
+#      multi-dns:
+#        type: A
+#        values:
+#        - 10.11.12.13
+#  deployment:
+#    elements:
+#      dns-server:
+#      - crowbar.virtual.cloud.suse.de
+#      - "@@controller@@"
+#      - "@@storage1@@"
+#      dns-client:
+#      - "@@compute1@@"
+#      - "@@storage2@@"
+#      - "@@compute2@@"
+#      - "@@controller@@"
+#      - "@@storage1@@"
+#- barclamp: logging
+#  attributes:
+#  deployment:
+#    elements:
+#      logging-server:
+#      - crowbar.virtual.cloud.suse.de
+#      logging-client:
+#      - "@@compute1@@"
+#      - "@@storage2@@"
+#      - "@@compute2@@"
+#      - "@@controller@@"
+#      - "@@storage1@@"
+#- barclamp: ntp
+#  attributes:
+#    external_servers:
+#    - 0.opensuse.pool.ntp.org
+#    - 1.opensuse.pool.ntp.org
+#    - 2.opensuse.pool.ntp.org
+#    - 3.opensuse.pool.ntp.org
+#  deployment:
+#    elements:
+#      ntp-server:
+#      - crowbar.virtual.cloud.suse.de
+#      ntp-client:
+#      - "@@compute1@@"
+#      - "@@storage2@@"
+#      - "@@compute2@@"
+#      - "@@controller@@"
+#      - "@@storage1@@"
+# WARNING: no proposals exist for pacemaker barclamp
+# WARNING: no proposals exist for nfs_client barclamp
+# WARNING: no proposals exist for suse_manager_client barclamp
+- barclamp: database
+  attributes:
+  deployment:
+    elements:
+      database-server:
+      - "@@controller@@"
+- barclamp: rabbitmq
+  attributes:
+    password: UioB8yXkBNwK
+    trove:
+      enabled: true
+      password: xNAUkLwmQoNG
+  deployment:
+    elements:
+      rabbitmq-server:
+      - "@@controller@@"
+- barclamp: keystone
+  attributes:
+    database_instance: default
+    rabbitmq_instance: default
+    db:
+      password: l3idXXYXWfm7
+    api:
+      region: CustomRegion
+    service:
+      token: bMytWwxqx3gg
+  deployment:
+    elements:
+      keystone-server:
+      - "@@controller@@"
+# WARNING: no proposals exist for monasca barclamp
+- barclamp: ceph
+  attributes:
+    config:
+      fsid: efd72fc6-dee7-4c1e-97ef-89d1cab34a98
+    keystone_instance: default
+    service_password: Yz7TfYV8eJxS
+  deployment:
+    elements:
+      ceph-calamari: []
+      ceph-mon:
+      - "@@storage1@@"
+      - "@@storage2@@"
+      - "@@compute1@@"
+      ceph-osd:
+      - "@@storage1@@"
+      - "@@storage2@@"
+      - "@@compute1@@"
+      ceph-mds:
+      - "@@controller@@"
+      ceph-radosgw:
+      - "@@storage1@@"
+# WARNING: no proposals exist for swift barclamp
+- barclamp: glance
+  attributes:
+    service_password: o5Z5yMZl2YrP
+    db:
+      password: dQpe0wYurHnN
+    default_store: rbd
+    keystone_instance: default
+    database_instance: default
+    rabbitmq_instance: default
+  deployment:
+    elements:
+      glance-server:
+      - "@@controller@@"
+- barclamp: cinder
+  attributes:
+    rabbitmq_instance: default
+    keystone_instance: default
+    glance_instance: default
+    database_instance: default
+    service_password: rEhRvMNerPUA
+    keymgr_fixed_key: es0isAFSa0oF
+    volumes:
+    - backend_driver: rbd
+      backend_name: default
+      raw:
+        volume_name: cinder-volumes
+        cinder_raw_method: first
+      rbd:
+        use_crowbar: true
+        config_file: "/etc/ceph/ceph.conf"
+        admin_keyring: "/etc/ceph/ceph.client.admin.keyring"
+        pool: volumes
+        user: cinder
+        secret_uuid: c2bfcb28-b467-4c4e-ae75-e9514046e92b
+        flatten_volume_from_snapshot: false
+    db:
+      password: WKjUC3mrq3Kz
+  deployment:
+    elements:
+      cinder-controller:
+      - "@@controller@@"
+      cinder-volume:
+      - "@@storage1@@"
+      - "@@storage2@@"
+      - "@@compute1@@"
+- barclamp: neutron
+  attributes:
+    service_password: PhSu76186e1I
+    rabbitmq_instance: default
+    keystone_instance: default
+    ml2_type_drivers:
+    - vxlan
+    - vlan
+    ml2_type_drivers_default_provider_network: vxlan
+    ml2_type_drivers_default_tenant_network: vxlan
+    database_instance: default
+    db:
+      password: zfYtnNc79Frk
+  deployment:
+    elements:
+      neutron-server:
+      - "@@controller@@"
+      neutron-network:
+      - "@@controller@@"
+# WARNING: no proposals exist for ironic barclamp
+- barclamp: nova
+  attributes:
+    service_password: WwVaobirMQ8E
+    neutron_metadata_proxy_shared_secret: q5IfgEbc4s6H
+    database_instance: default
+    rabbitmq_instance: default
+    keystone_instance: default
+    glance_instance: default
+    cinder_instance: default
+    neutron_instance: default
+    itxt_instance: ''
+    trusted_flavors: true
+    use_migration: true
+    compute_remotefs_sshkey: |
+      -----BEGIN OPENSSH PRIVATE KEY-----
+      b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+      QyNTUxOQAAACC26Y44Z7362bnsbdILFrd8LLM3Xj3oQZh//PM9pdC8mQAAAJguxur8Lsbq
+      /AAAAAtzc2gtZWQyNTUxOQAAACC26Y44Z7362bnsbdILFrd8LLM3Xj3oQZh//PM9pdC8mQ
+      AAAEBLoITjjScGAmNGn2VLM4aGOy0Ttq55eYY3OKmPXFg8GbbpjjhnvfrZuext0gsWt3ws
+      szdePehBmH/88z2l0LyZAAAAD2Nyb3diYXJAY3Jvd2JhcgECAwQFBg==
+      -----END OPENSSH PRIVATE KEY-----
+    ec2-api:
+      db:
+        password: FWoj7JfdwULV
+    db:
+      password: V21x3YZlizk2
+    api_db:
+      password: lvYFttob5RFB
+    metadata:
+      vendordata:
+        json: '{"custom-key": "custom-value"}'
+  deployment:
+    elements:
+      nova-controller:
+      - "@@controller@@"
+      nova-compute-kvm:
+      - "@@compute2@@"
+      nova-compute-qemu: []
+      nova-compute-xen: []
+      ec2-api:
+      - "@@controller@@"
+- barclamp: horizon
+  attributes:
+    keystone_instance: default
+    database_instance: default
+    db:
+      password: 1Jv6N0EJ5sZy
+  deployment:
+    elements:
+      horizon-server:
+      - "@@controller@@"
+- barclamp: heat
+  attributes:
+    rabbitmq_instance: default
+    database_instance: default
+    stack_domain_admin_password: Ewxo5sPGCPVS
+    keystone_instance: default
+    service_password: 64b2VRevSkcK
+    auth_encryption_key: 5fwbz9xAEEoiSi5c0hw0GnJikfzI8jVwklqz
+    db:
+      password: 8Alb7NGWbuzq
+  deployment:
+    elements:
+      heat-server:
+      - "@@controller@@"
+- barclamp: ceilometer
+  attributes:
+    metering_secret: MpBg1W4rHvVH
+    rabbitmq_instance: default
+    database_instance: default
+    keystone_instance: default
+    service_password: OxZhPO73nbTG
+    db:
+      password: u7HkLNBvM1VT
+  deployment:
+    elements:
+      ceilometer-agent:
+      - "@@compute2@@"
+      ceilometer-central:
+      - "@@controller@@"
+      ceilometer-server:
+      - "@@controller@@"
+      ceilometer-swift-proxy-middleware: []
+# WARNING: no proposals exist for updater barclamp
+- barclamp: aodh
+  attributes:
+    rabbitmq_instance: default
+    database_instance: default
+    keystone_instance: default
+    ceilometer_instance: default
+    service_password: sI3e5dT2YkrD
+    db:
+      password: H4YCEuFC61JD
+  deployment:
+    elements:
+      aodh-server:
+      - "@@controller@@"
+#- barclamp: barbican
+#  attributes:
+#    db:
+#      password: SsYDz3mDRvWz
+#    kek: mQHjqb+FTydD6sBdNgevKIyB2Ao9ViVb7dXpu7a0oKM=
+#    database_instance: default
+#    keystone_instance: default
+#    rabbitmq_instance: default
+#    service_password: xuT511ZJcEXr
+#  deployment:
+#    elements:
+#      barbican-controller:
+#      - "@@controller@@"
+- barclamp: manila
+  attributes:
+    default_share_type: ceph
+    service_password: dVwZd4eo4iIk
+    rabbitmq_instance: default
+    keystone_instance: default
+    database_instance: default
+    nova_instance: default
+    cinder_instance: default
+    glance_instance: default
+    neutron_instance: default
+    db:
+      password: YMgc7EIYz91p
+    shares:
+    - cephfs:
+        use_crowbar: true
+        cephfs_conf_path: "/etc/ceph/ceph.conf"
+        cephfs_auth_id: manila
+        cephfs_cluster_name: ceph
+      backend_driver: cephfs
+      backend_name: cephfs-backend
+  deployment:
+    elements:
+      manila-server:
+      - "@@controller@@"
+      manila-share:
+      - "@@storage1@@"
+      - "@@storage2@@"
+      - "@@compute1@@"
+#- barclamp: trove
+#  attributes:
+#    service_password: fOGyhcCZIH9b
+#    keystone_instance: default
+#    nova_instance: default
+#    swift_instance: ''
+#    cinder_instance: default
+#    rabbitmq_instance: default
+#    db:
+#      password: SMyY0FGLD7e0
+#  deployment:
+#    elements:
+#      trove-server:
+#      - "@@controller@@"
+# WARNING: no proposals exist for magnum barclamp
+#- barclamp: sahara
+#  attributes:
+#    keystone_instance: default
+#    database_instance: default
+#    glance_instance: default
+#    nova_instance: default
+#    heat_instance: default
+#    neutron_instance: default
+#    rabbitmq_instance: default
+#    cinder_instance: default
+#    service_password: PFZuLeUcL04R
+#    plugins: vanilla,spark,cdh,ambari,fake
+#    db:
+#      password: Nk2RQcW3iH9T
+#  deployment:
+#    elements:
+#      sahara-server:
+#      - "@@controller@@"
+- barclamp: tempest
+  attributes:
+    tempest_adm_password: miKao65J37y1
+    tempest_adm_username: tempest-adm-h5EazxeKItvW
+    tempest_user_password: dTqDaRqJ4YeE
+    tempest_user_username: tempest-user-sObX5WtUhKR7
+    tempest_user_tenant: tempest-tenant-67PBMltYPPnW
+    nova_instance: default
+    manila:
+      enable_cert_rules_for_protocols: ''
+      enable_ip_rules_for_protocols: ''
+      run_snapshot_tests: false
+      enable_protocols: cephfs
+      storage_protocol: CEPHFS
+    magnum:
+      flavor_id: m1.smaller
+      master_flavor_id: m2.smaller
+  deployment:
+    elements:
+      tempest:
+      - "@@controller@@"
