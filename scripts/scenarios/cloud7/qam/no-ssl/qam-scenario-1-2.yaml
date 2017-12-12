@@ -220,8 +220,6 @@ proposals:
       - "@@controller@@"
       swift-storage:
       - "@@storage1@@"
-      - "@@compute2@@"
-      - "@@compute1@@"
       - "@@storage2@@"
 - barclamp: glance
   attributes:
@@ -261,8 +259,6 @@ proposals:
       - "@@controller@@"
       cinder-volume:
       - "@@storage1@@"
-      - "@@compute2@@"
-      - "@@compute1@@"
       - "@@storage2@@"
       - "@@controller@@"
 - barclamp: neutron
@@ -313,10 +309,9 @@ proposals:
       nova-controller:
       - "@@controller@@"
       nova-compute-kvm:
-      - "@@storage1@@"
-      - "@@compute2@@"
       - "@@compute1@@"
-      - "@@storage2@@"
+      - "@@compute2@@"
+      - "@@compute3@@"
       nova-compute-qemu: []
       nova-compute-xen: []
       ec2-api:

@@ -199,11 +199,9 @@ proposals:
       ceph-mon:
       - "@@storage1@@"
       - "@@storage2@@"
-      - "@@compute1@@"
       ceph-osd:
       - "@@storage1@@"
       - "@@storage2@@"
-      - "@@compute1@@"
       ceph-mds:
       - "@@controller@@"
       ceph-radosgw:
@@ -253,7 +251,6 @@ proposals:
       cinder-volume:
       - "@@storage1@@"
       - "@@storage2@@"
-      - "@@compute1@@"
 - barclamp: neutron
   attributes:
     service_password: PhSu76186e1I
@@ -310,7 +307,9 @@ proposals:
       nova-controller:
       - "@@controller@@"
       nova-compute-kvm:
+      - "@@compute1@@"
       - "@@compute2@@"
+      - "@@compute3@@"
       nova-compute-qemu: []
       nova-compute-xen: []
       ec2-api:
@@ -351,7 +350,9 @@ proposals:
   deployment:
     elements:
       ceilometer-agent:
+      - "@@compute1@@"
       - "@@compute2@@"
+      - "@@compute3@@"
       ceilometer-central:
       - "@@controller@@"
       ceilometer-server:
@@ -412,7 +413,6 @@ proposals:
       manila-share:
       - "@@storage1@@"
       - "@@storage2@@"
-      - "@@compute1@@"
 #- barclamp: trove
 #  attributes:
 #    service_password: fOGyhcCZIH9b
