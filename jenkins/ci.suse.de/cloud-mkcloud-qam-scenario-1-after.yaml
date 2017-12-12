@@ -6,7 +6,7 @@
       <a href='https://github.com/SUSE-Cloud/automation/tree/master/jenkins/ci.suse.de/'>git</a>
       </b>
       Scenario details:
-        - 6 nodes
+        - 5 nodes
         - non-HA
         - swift
         - Neutron: openvswitch vxlan 
@@ -130,7 +130,7 @@
 
       - string:
           name: nodealiases
-          default: "compute-kvm=2,storage-swift=2"
+          default: "compute-kvm=3,storage-swift=2"
           description: Aliases for the nodes, number of controllers is calculated from cluster config(). Example "compute-kvm=2,storage-swift=2" or compute-xen=2 can be used for XEN nodes.
 
       - string:
@@ -151,7 +151,7 @@
 
       - string:
           name: libvirt_type
-          default:
+          default: kvm
           description: Optional, set libvirt_type, default kvm and other option is xen
 
       - text:
